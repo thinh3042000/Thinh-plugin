@@ -132,6 +132,7 @@ final class ScriptPlugin
      
         if (is_single()) {
             $page_id = 'single-post';
+            $page_id2 = 'single-post';
             wp_enqueue_script('page-' . $page_id . '.js');
         } else {
             $page_id = get_the_ID();
