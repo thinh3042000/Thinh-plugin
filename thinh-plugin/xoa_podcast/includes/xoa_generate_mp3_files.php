@@ -22,7 +22,12 @@ function xoa_generate_mp3_files()
             }
 
             $upload_dir = wp_upload_dir();
-            $audio_file = $upload_dir['basedir'] . '/audio/' . $post_title . '.mp3';
+            $audio_dir = $upload_dir['basedir'] . '/audio/';
+            $audio_file = $audio_dir . $post_title . '.mp3';
+
+            if (!file_exists($audio_dir)) {
+                wp_mkdir_p($audio_dir);
+            }
 
             if (!file_exists($audio_file)) {
                 $audio_content = xoa_text_to_speech(strip_tags($post_content));
