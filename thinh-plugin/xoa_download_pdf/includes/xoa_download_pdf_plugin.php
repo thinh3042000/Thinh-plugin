@@ -5,8 +5,7 @@ namespace WP_xoa_download_pdf;
 if (!defined('ABSPATH')) {
     exit;
 }
-require_once(ABSPATH . '/wp-content/vendor/tecnickcom/tcpdf/tcpdf.php');
-
+require_once plugin_dir_path(__FILE__) . '../vendor/tecnickcom/tcpdf/tcpdf.php';
 use \TCPDF;
 
 class MYPDF extends TCPDF
