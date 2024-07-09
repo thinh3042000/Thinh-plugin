@@ -188,20 +188,20 @@ final class XoaPodcastPlugin
         );
     }
 
-    function create_default_podcast_meta_fields($post_id)
-    {
-        // Tạo trường post meta '_podcast_audio_file' nếu chưa tồn tại
-        $existing_audio_file = get_post_meta($post_id, '_podcast_audio_file', true);
-        if (empty($existing_audio_file)) {
-            add_post_meta($post_id, '_podcast_audio_file', '', true);
-        }
+    // function create_default_podcast_meta_fields($post_id)
+    // {
+    //     // Tạo trường post meta '_podcast_audio_file' nếu chưa tồn tại
+    //     $existing_audio_file = get_post_meta($post_id, '_podcast_audio_file', true);
+    //     if (empty($existing_audio_file)) {
+    //         add_post_meta($post_id, '_podcast_audio_file', '', true);
+    //     }
 
-        // Tạo trường post meta '_podcast_image_file' nếu chưa tồn tại
-        $existing_image_file = get_post_meta($post_id, '_podcast_image_file', true);
-        if (empty($existing_image_file)) {
-            add_post_meta($post_id, '_podcast_image_file', '', true);
-        }
-    }
+    //     // Tạo trường post meta '_podcast_image_file' nếu chưa tồn tại
+    //     $existing_image_file = get_post_meta($post_id, '_podcast_image_file', true);
+    //     if (empty($existing_image_file)) {
+    //         add_post_meta($post_id, '_podcast_image_file', '', true);
+    //     }
+    // }
     function xoa_podcast_audio_file_callback($post)
     {
         wp_nonce_field('xoa_save_podcast_audio_file', 'xoa_podcast_audio_file_nonce');
@@ -273,7 +273,7 @@ final class XoaPodcastPlugin
         add_action('add_meta_boxes', [$this, 'xoa_add_podcast_meta_boxes']);
         add_action('publish_post', [$this, 'xoa_save_podcast_meta_boxes']);
         add_action('save_post', [$this, 'xoa_save_podcast_meta_boxes']);
-        add_action('save_post', [$this, 'create_default_podcast_meta_fields']);
+        // add_action('save_post', [$this, 'create_default_podcast_meta_fields']);
     }
 }
 
