@@ -188,28 +188,28 @@ final class XoaPodcastPlugin
         );
     }
 
-    // function create_default_podcast_meta_fields($post_id)
-    // {
-    //     // Tạo trường post meta '_podcast_audio_file' nếu chưa tồn tại
-    //     $existing_audio_file = get_post_meta($post_id, '_podcast_audio_file', true);
-    //     if (empty($existing_audio_file)) {
-    //         add_post_meta($post_id, '_podcast_audio_file', '', true);
-    //     }
+    function create_default_podcast_meta_fields($post_id)
+    {
+        $existing_audio_file = get_post_meta($post_id, '_podcast_audio_file', true);
+        if (empty($existing_audio_file)) {
+            add_post_meta($post_id, '_podcast_audio_file', '', true);
+        }
 
-    //     // Tạo trường post meta '_podcast_image_file' nếu chưa tồn tại
-    //     $existing_image_file = get_post_meta($post_id, '_podcast_image_file', true);
-    //     if (empty($existing_image_file)) {
-    //         add_post_meta($post_id, '_podcast_image_file', '', true);
-    //     }
-    // }
+        $existing_image_file = get_post_meta($post_id, '_podcast_image_file', true);
+        if (empty($existing_image_file)) {
+            add_post_meta($post_id, '_podcast_image_file', '', true);
+        }
+    }
+
+
     function xoa_podcast_audio_file_callback($post)
     {
         wp_nonce_field('xoa_save_podcast_audio_file', 'xoa_podcast_audio_file_nonce');
         $value = get_post_meta($post->ID, '_podcast_audio_file', true);
-
         echo '<input type="file" id="podcast_audio_file" name="podcast_audio_file" />';
         if ($value) {
-            echo '<p>Current file: <a href="' . esc_url($value) . '" target="_blank">' . esc_url($value) . '</a></p>';
+            echo '<p>File hiện tại: <a href="' . esc_url($value) . '" target="_blank">' . esc_url($value) . '</a></p>';
+            echo '<input type="checkbox" id="delete_podcast_audio_file" name="delete_podcast_audio_file" value="1" /> Xóa file hiện tại';
         }
     }
 
@@ -217,10 +217,16 @@ final class XoaPodcastPlugin
     {
         wp_nonce_field('xoa_save_podcast_image_file', 'xoa_podcast_image_file_nonce');
         $value = get_post_meta($post->ID, '_podcast_image_file', true);
-        echo '<input type="text" id="podcast_image_file" name="podcast_image_file" />';
+        echo '<input type="file" id="podcast_image_file" name="podcast_image_file" />';
         if ($value) {
-            echo '<p>Current file: <a href="' . esc_url($value) . '" target="_blank">' . esc_url($value) . '</a></p>';
+            echo '<p>File hiện tại: <a href="' . esc_url($value) . '" target="_blank"><img src="' . esc_url($value) . '" width="200" height="200" /></a></p>';
+            echo '<input type="checkbox" id="delete_podcast_image_file" name="delete_podcast_image_file" value="1" /> Xóa file hiện tại';
         }
+    }
+    
+    function xoa_add_enctype_attribute($post)
+    {
+        echo ' enctype="multipart/form-data"';
     }
 
     function xoa_save_podcast_meta_boxes($post_id)
@@ -243,23 +249,24 @@ final class XoaPodcastPlugin
             }
         }
 
-        // Lưu trữ file audio
-        if (isset($_FILES['podcast_audio_file']) && !empty($_FILES['podcast_audio_file']['name'])) {
-            $upload = wp_handle_upload($_FILES['podcast_audio_file'], array('test_form' => false));
-            if ($upload && !isset($upload['error'])) {
-                update_post_meta($post_id, '_podcast_audio_file', $upload['url']);
-            } else {
-                error_log('Audio file upload error: ' . $upload['error']);
+        if (isset($_POST['delete_podcast_audio_file']) && $_POST['delete_podcast_audio_file'] == '1') {
+            delete_post_meta($post_id, '_podcast_audio_file');
+        } elseif (isset($_FILES['podcast_audio_file']) && !empty($_FILES['podcast_audio_file']['name'])) {
+            $uploaded_audio = wp_handle_upload($_FILES['podcast_audio_file'], ['test_form' => false]);
+
+            if (!isset($uploaded_audio['error'])) {
+                update_post_meta($post_id, '_podcast_audio_file', $uploaded_audio['url']);
             }
         }
 
-        // Lưu trữ file hình ảnh
-        if (isset($_FILES['podcast_image_file']) && !empty($_FILES['podcast_image_file']['name'])) {
-            $upload = wp_handle_upload($_FILES['podcast_image_file'], array('test_form' => false));
-            if ($upload && !isset($upload['error'])) {
-                update_post_meta($post_id, '_podcast_image_file', $upload['url']);
-            } else {
-                error_log('Image file upload error: ' . $upload['error']);
+
+        if (isset($_POST['delete_podcast_image_file']) && $_POST['delete_podcast_image_file'] == '1') {
+            delete_post_meta($post_id, '_podcast_image_file');
+        } elseif (isset($_FILES['podcast_image_file']) && !empty($_FILES['podcast_image_file']['name'])) {
+            $uploaded_image = wp_handle_upload($_FILES['podcast_image_file'], ['test_form' => false]);
+
+            if (!isset($uploaded_image['error'])) {
+                update_post_meta($post_id, '_podcast_image_file', $uploaded_image['url']);
             }
         }
     }
@@ -273,7 +280,8 @@ final class XoaPodcastPlugin
         add_action('add_meta_boxes', [$this, 'xoa_add_podcast_meta_boxes']);
         add_action('publish_post', [$this, 'xoa_save_podcast_meta_boxes']);
         add_action('save_post', [$this, 'xoa_save_podcast_meta_boxes']);
-        // add_action('save_post', [$this, 'create_default_podcast_meta_fields']);
+        add_action('publish_post', [$this, 'create_default_podcast_meta_fields']);
+        add_action('post_edit_form_tag', [$this, 'xoa_add_enctype_attribute']);
     }
 }
 
