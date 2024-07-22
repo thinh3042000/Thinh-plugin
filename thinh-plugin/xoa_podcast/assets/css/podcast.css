@@ -3,3 +3,57 @@ audio {
     width: 100%;
  
 }
+
+.podcast-share-icons {
+    display: flex;
+}
+
+#progress {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    background: linear-gradient(to right, #00AF5A 0%, #00AF5A 50%, #CCCCCC 50%, #CCCCCC 100%);
+}
+
+#progress::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    background: #00AF5A;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 4px solid white;
+    box-shadow: 0 5px 5px rgba(0, 175, 90, 0.4);
+}
+
+.controls-podcast {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+span#stop-button {
+    padding: 0px 15px;
+}
+
+.controls-main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+time-display {
+    margin-top: 10px;
+}
+
+.button-container {
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.button-container.active {
+    background-color: #00AF5A;
+    border-radius: 50%;
+}
