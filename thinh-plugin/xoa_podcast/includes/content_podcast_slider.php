@@ -34,7 +34,7 @@ function load_podcast_slider_content($term = '')
                         <div class="podcast-slide-author"><?php echo get_the_author(); ?></div>
                         </div>
                         <div class="podcast-play-icon">
-                            <img class="icon-slider" src="http://localhost/wp/backup2/wp-content/plugins/xoa_podcast/assets/img/Frame.svg" alt="" width="40px">
+                            <img class="icon-slider" src="<?php echo plugins_url('../assets/img/Frame.svg', __FILE__); ?>" alt="" width="40px">
                         </div>
                     </div>
                     </a>

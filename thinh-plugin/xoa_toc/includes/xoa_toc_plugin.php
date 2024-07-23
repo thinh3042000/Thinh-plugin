@@ -58,8 +58,7 @@ final class XoaTocPlugin
         if (empty($matches[0])) {
             return '';
         }
-        $toc = '
-        <style> 
+        $toc = '<style>
         #toc-loading {
     position: relative;
     width: 100%;
@@ -171,7 +170,6 @@ span.toc-custom {
 .toc-item.active .toc-sublist {
   display: block;
 }
-
 
         </style>
         <div id="toc-loading">';
