@@ -135,8 +135,100 @@ final class XoaPodcastPlugin
     {
         add_menu_page('Generate MP3 Podcast', 'Generate MP3 Podcast', 'manage_options', 'generate-mp3', [$this, 'xoa_generate_mp3_page']);
         add_submenu_page('generate-mp3', 'Generated MP3 List', 'Generated MP3 List', 'manage_options', 'generated-mp3-list', [$this, 'xoa_display_generated_mp3_page']);
+        add_submenu_page('generate-mp3', 'Settings', 'Settings', 'manage_options', 'xoa-mp3-settings', [$this, 'xoa_display_settings_page']);
+
     }
 
+    function xoa_display_settings_page() {
+        if (isset($_POST['xoa_save_settings'])) {
+            update_option('xoa_api_key', sanitize_text_field($_POST['xoa_api_key']));
+            update_option('xoa_voice_id', sanitize_text_field($_POST['xoa_voice_id']));
+            echo '<div class="updated"><p>Settings saved.</p></div>';
+        }
+    
+        $api_key = get_option('xoa_api_key', '');
+        $voice_id = get_option('xoa_voice_id', '');
+    
+        $file_path = plugin_dir_path(__FILE__) . 'voice_data.php';
+        if (file_exists($file_path)) {
+            include $file_path;
+        } else {
+            $data = []; 
+        }
+
+        $file_path = plugin_dir_path(__FILE__) . 'voice_select.php';
+        if (file_exists($file_path)) {
+            include $file_path;
+        } else {
+            $data_name = []; 
+        }
+
+    
+        echo '<div class="wrap">';
+        echo '<h1>Settings</h1>';
+        echo '<form method="post" action="">';
+        echo '<table class="form-table">';
+        
+        // API Key input
+        echo '<tr>';
+        echo '<th scope="row"><label for="xoa_api_key">API Key</label></th>';
+        echo '<td><input type="text" id="xoa_api_key" name="xoa_api_key" value="' . esc_attr($api_key) . '" class="regular-text"></td>';
+        echo '</tr>';
+        
+        // Voice ID select
+        echo '<tr>';
+        echo '<th scope="row"><label for="xoa_voice_id">Voice ID</label></th>';
+        echo '<td>';
+        echo '<select id="xoa_voice_id" name="xoa_voice_id" class="regular-text">';
+        foreach ($data_name as $voice) {
+            $selected = $voice['voice_id'] === $voice_id ? 'selected="selected"' : '';
+            echo '<option value="' . esc_attr($voice['voice_id']) . '" ' . $selected . '>' . esc_html($voice['name']) . '</option>';
+        }
+        echo '</select>';
+        echo '</td>';
+        echo '</tr>';
+        
+        echo '</table>';
+        echo '<p class="submit"><input type="submit" name="xoa_save_settings" id="xoa_save_settings" class="button button-primary" value="Save Changes"></p>';
+        echo '</form>';
+    
+        echo '<h2>Voice Data</h2>';
+        echo '<table class="widefat fixed" style="width:90%; margin: 0 auto;">';
+        echo '<thead><tr>';
+        echo '<th  style="width:40px; font-size: 16px; font-weight: bold">#</th>'; 
+        echo '<th  style="font-size: 16px;font-weight: bold;">Name</th>';
+        echo '<th  style="font-size: 16px;font-weight: bold;">Voice ID</th>';
+        echo '<th  style="font-size: 16px;font-weight: bold;">Gender</th>';
+        echo '<th  style="font-size: 16px;font-weight: bold;">Age</th>';
+        echo '<th  style="font-size: 16px;font-weight: bold;">Accent</th>';
+        echo '<th  style="font-size: 16px;font-weight: bold;">Description</th>';
+        echo '<th  style="font-size: 16px;font-weight: bold;">Use Case</th>';
+        echo '<th style="font-size: 16px;font-weight: bold;">Audio Test</th>';
+        echo '</tr></thead>';
+        echo '<tbody>';
+        
+        $count = 1; 
+        foreach ($data as $item) {
+            $audio_url = plugins_url('../assets/audio/' . esc_attr($item['preview_url']), __FILE__);
+
+            echo '<tr>';
+            echo '<td class="sst-voice">' . esc_html($count) . '.</td>'; 
+            echo '<td>' . esc_html($item['name']) . '</td>';
+            echo '<td>' . esc_html($item['voice_id']) . '</td>';
+            echo '<td>' . esc_html($item['gender']) . '</td>';
+            echo '<td>' . esc_html($item['age']) . '</td>';
+            echo '<td>' . esc_html($item['accent']) . '</td>';
+            echo '<td>' . esc_html($item['description']) . '</td>';
+            echo '<td>' . esc_html($item['use_case']) . '</td>';
+            echo '<td><audio controls><source src="' . esc_url($audio_url) . '" type="audio/mp3"></audio></td>';
+            echo '</tr>';
+            $count++; 
+        }
+        
+        echo '</tbody>';
+        echo '</table>';
+        echo '</div>';
+    }
     function xoa_register_podcast_cpt()
     {
         $labels = array(
@@ -1327,3 +1419,5 @@ require_once plugin_dir_path(__FILE__) . 'xoa_text_to_speech.php';
 require_once plugin_dir_path(__FILE__) . 'xoa_generate_mp3_files.php';
 require_once plugin_dir_path(__FILE__) . 'xoa_display_generated_mp3_list.php';
 require_once plugin_dir_path(__FILE__) . 'content_podcast_slider.php';
+require_once plugin_dir_path(__FILE__) . 'xoa_display_settings_page.php';
+
