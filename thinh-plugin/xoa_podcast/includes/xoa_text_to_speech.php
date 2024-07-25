@@ -1,40 +1,38 @@
 <?php
 function xoa_text_to_speech($text)
 {
-    $text = substr($text, 0, 5000);
+    $curl = curl_init();
 
-    $api_key = 'AIzaSyDA7HHTsmCwX7RkH8MILSxIOMASJamihYw';
-    $url = 'https://texttospeech.googleapis.com/v1/text:synthesize?key=' . $api_key;
+    $KEY_API = "sk_8d21619fa3d8c4226694721abbf4ef10360770aa3bf1ef3a";
+    $Voice_ID = "21m00Tcm4TlvDq8ikWAM";
 
-    $data = array(
-        'input' => array('text' => $text),
-        'voice' => array('languageCode' => 'en-US', 'ssmlGender' => 'FEMALE'),
-        'audioConfig' => array('audioEncoding' => 'MP3')
-    );
+    curl_setopt_array($curl, [
+        CURLOPT_URL => "https://api.elevenlabs.io/v1/text-to-speech/{$Voice_ID}",
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => "",
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 240,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => "POST",
+        CURLOPT_POSTFIELDS => json_encode([
+            'text' => $text,
+            'model_id' => 'eleven_monolingual_v1'
+        ]),
+        CURLOPT_HTTPHEADER => [
+            "Content-Type: application/json",
+            "xi-api-key: $KEY_API"
+        ],
+    ]);
 
-    $json_data = json_encode($data);
+    $response = curl_exec($curl);
+    $err = curl_error($curl);
 
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $json_data);
+    curl_close($curl);
 
-    $result = curl_exec($ch);
-    if ($result === false) {
-        $error = curl_error($ch);
-        error_log('Error accessing Text-to-Speech API: ' . $error);
-        curl_close($ch);
+    if ($err) {
+        error_log("cURL Error: " . $err);
         return false;
-    }
-
-    $response = json_decode($result, true);
-    curl_close($ch);
-
-    if (isset($response['audioContent'])) {
-        return base64_decode($response['audioContent']);
     } else {
-        error_log('Error in API response: ' . print_r($response, true));
-        return false;
+        return $response;
     }
 }
