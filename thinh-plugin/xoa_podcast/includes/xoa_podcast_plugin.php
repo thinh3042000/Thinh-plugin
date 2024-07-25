@@ -1419,5 +1419,4 @@ require_once plugin_dir_path(__FILE__) . 'xoa_text_to_speech.php';
 require_once plugin_dir_path(__FILE__) . 'xoa_generate_mp3_files.php';
 require_once plugin_dir_path(__FILE__) . 'xoa_display_generated_mp3_list.php';
 require_once plugin_dir_path(__FILE__) . 'content_podcast_slider.php';
-require_once plugin_dir_path(__FILE__) . 'xoa_display_settings_page.php';
 
