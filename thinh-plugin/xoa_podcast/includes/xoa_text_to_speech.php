@@ -3,8 +3,6 @@ function xoa_text_to_speech($text)
 {
     $curl = curl_init();
 
-    // $KEY_API = "sk_8d21619fa3d8c4226694721abbf4ef10360770aa3bf1ef3a";
-    // $Voice_ID = "21m00Tcm4TlvDq8ikWAM";
     $KEY_API = get_option('xoa_api_key', '');
     $Voice_ID = get_option('xoa_voice_id', '');
     $data = [
