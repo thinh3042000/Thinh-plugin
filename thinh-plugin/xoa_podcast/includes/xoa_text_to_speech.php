@@ -5,10 +5,7 @@ function xoa_text_to_speech($text)
 
     $KEY_API = get_option('xoa_api_key', '');
     $Voice_ID = get_option('xoa_voice_id', '');
-    $data = [
-        "1" =>  $KEY_API,
-        "2" => $Voice_ID
-    ];
+
     curl_setopt_array($curl, [
         CURLOPT_URL => "https://api.elevenlabs.io/v1/text-to-speech/{$Voice_ID}",
         CURLOPT_RETURNTRANSFER => true,
