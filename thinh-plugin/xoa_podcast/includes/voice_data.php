@@ -1,5 +1,4 @@
 <?php
-// voice_data.php
 
 $data = [
     [
