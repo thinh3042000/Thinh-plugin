@@ -97,8 +97,12 @@ final class XoaPodcastPlugin
                     if (file_exists($audio_file)) {
                         unlink($audio_file);
                     }
+                    $check_api_choose = get_option('check_api_choose', '');
 
-                    $audio_content = xoa_text_to_speech(strip_tags($post_content));
+                    $audio_content = ($check_api_choose != 'google') ?
+                        xoa_text_to_speech(strip_tags($post_content)) :
+                        xoa_text_to_speech_google_api(strip_tags($post_content));
+                        
                     if ($audio_content !== false) {
                         file_put_contents($audio_file, $audio_content);
                     }
@@ -142,12 +146,16 @@ final class XoaPodcastPlugin
     {
         if (isset($_POST['xoa_save_settings'])) {
             update_option('xoa_api_key', sanitize_text_field($_POST['xoa_api_key']));
+            update_option('xoa_api_key_google', sanitize_text_field($_POST['xoa_api_key_google']));
             update_option('xoa_voice_id', sanitize_text_field($_POST['xoa_voice_id']));
+            update_option('check_api_choose', sanitize_text_field($_POST['check_api_choose']));
             echo '<div class="updated"><p>Settings saved.</p></div>';
         }
 
         $api_key = get_option('xoa_api_key', '');
         $voice_id = get_option('xoa_voice_id', '');
+        $api_key_google = get_option('xoa_api_key_google', '');
+        $check_api_choose = get_option('check_api_choose', '');
 
         $file_path = plugin_dir_path(__FILE__) . 'voice_data.php';
         if (file_exists($file_path)) {
@@ -163,21 +171,35 @@ final class XoaPodcastPlugin
             $data_name = [];
         }
 
-
         echo '<div class="wrap">';
         echo '<h1>Settings</h1>';
         echo '<form method="post" action="">';
         echo '<table class="form-table">';
 
-        // API Key input
+        // API Key input for ElevenLabs
         echo '<tr>';
-        echo '<th scope="row"><label for="xoa_api_key">API Key</label></th>';
+        echo '<th scope="row"><label for="xoa_api_key">API Key ElevenLabs</label></th>';
         echo '<td><input type="text" id="xoa_api_key" name="xoa_api_key" value="' . esc_attr($api_key) . '" class="regular-text"></td>';
+        echo '</tr>';
+
+        // API Key input for Google
+        echo '<tr>';
+        echo '<th scope="row"><label for="xoa_api_key_google">API Key Google</label></th>';
+        echo '<td><input type="text" id="xoa_api_key_google" name="xoa_api_key_google" value="' . esc_attr($api_key_google) . '" class="regular-text"></td>';
+        echo '</tr>';
+
+        // Radio buttons for selecting the API
+        echo '<tr>';
+        echo '<th scope="row">Choose API</th>';
+        echo '<td>';
+        echo '<label><input type="radio" name="check_api_choose" value="eleven" ' . checked('eleven', $check_api_choose, false) . '> ElevenLabs</label><br>';
+        echo '<label><input type="radio" name="check_api_choose" value="google" ' . checked('google', $check_api_choose, false) . '> Google</label>';
+        echo '</td>';
         echo '</tr>';
 
         // Voice ID select
         echo '<tr>';
-        echo '<th scope="row"><label for="xoa_voice_id">Voice</label></th>';
+        echo '<th scope="row"><label for="xoa_voice_id">Voice ElevenLabs</label></th>';
         echo '<td>';
         echo '<select id="xoa_voice_id" name="xoa_voice_id" class="regular-text">';
         foreach ($data_name as $voice) {
@@ -195,14 +217,14 @@ final class XoaPodcastPlugin
         echo '<h2>Voice Data</h2>';
         echo '<table class="widefat fixed" style="width:90%; margin: 0 auto;">';
         echo '<thead><tr>';
-        echo '<th  style="width:40px; font-size: 16px; font-weight: bold">#</th>';
-        echo '<th  style="font-size: 16px;font-weight: bold;">Name</th>';
-        echo '<th  style="font-size: 16px;font-weight: bold;">Voice ID</th>';
-        echo '<th  style="font-size: 16px;font-weight: bold;">Gender</th>';
-        echo '<th  style="font-size: 16px;font-weight: bold;">Age</th>';
-        echo '<th  style="font-size: 16px;font-weight: bold;">Accent</th>';
-        echo '<th  style="font-size: 16px;font-weight: bold;">Description</th>';
-        echo '<th  style="font-size: 16px;font-weight: bold;">Use Case</th>';
+        echo '<th style="width:40px; font-size: 16px; font-weight: bold">#</th>';
+        echo '<th style="font-size: 16px;font-weight: bold;">Name</th>';
+        echo '<th style="font-size: 16px;font-weight: bold;">Voice ID</th>';
+        echo '<th style="font-size: 16px;font-weight: bold;">Gender</th>';
+        echo '<th style="font-size: 16px;font-weight: bold;">Age</th>';
+        echo '<th style="font-size: 16px;font-weight: bold;">Accent</th>';
+        echo '<th style="font-size: 16px;font-weight: bold;">Description</th>';
+        echo '<th style="font-size: 16px;font-weight: bold;">Use Case</th>';
         echo '<th style="font-size: 16px;font-weight: bold;">Audio Test</th>';
         echo '</tr></thead>';
         echo '<tbody>';
@@ -229,6 +251,7 @@ final class XoaPodcastPlugin
         echo '</table>';
         echo '</div>';
     }
+
     function xoa_register_podcast_cpt()
     {
         $labels = array(
@@ -333,7 +356,7 @@ final class XoaPodcastPlugin
             <source src="' . esc_url($value) . '" type="audio/mpeg">
             Your browser does not support the audio element.
           </audio>
-          </div>'; 
+          </div>';
             echo '<div><p>File hiện tại: <a href="' . esc_url($value) . '" target="_blank">' . esc_url($value) . '</a></p> </div>';
             echo '<input type="checkbox" id="delete_podcast_audio_file" name="delete_podcast_audio_file" value="1" /> Delete File';
         }
@@ -378,16 +401,24 @@ final class XoaPodcastPlugin
             include $file_path;
         }
 
-        $select_options = '<span>Voice: </span><select style="width:40%" id="voice_select" name="voice_select">';
-        foreach ($data_name as $voice) {
-            $select_options .= '<option value="' . esc_attr($voice['voice_id']) . '">' . esc_html($voice['name']) . '</option>';
-        }
-        $select_options .= '</select>';
+        $check_api_choose = get_option('check_api_choose', '');
 
         echo '<div id="select_voice_container" style="display: none;">';
         echo '<button type="button" id="back_to_search" class="button button-secondary">' . esc_html__('Back', 'hello-elementor') . '</button>';
         echo '<p id="voice_selection_message"></p>';
-        echo $select_options;
+
+        if ($check_api_choose !== 'google') {
+            $select_options = '<span>Voice: </span><select style="width:40%" id="voice_select" name="voice_select">';
+            foreach ($data_name as $voice) {
+                $select_options .= '<option value="' . esc_attr($voice['voice_id']) . '">' . esc_html($voice['name']) . '</option>';
+            }
+            $select_options .= '</select>';
+            echo $select_options;
+        } else {
+            echo '<input type="hidden" id="voice_select" name="voice_select" value="" />';
+        }
+
+
         echo '<button type="button" id="xoa_save_settings_sample" class="button button-primary">Audio Test</button>';
         echo '</div>';
 
@@ -617,7 +648,7 @@ final class XoaPodcastPlugin
 
         if ($results) {
             foreach ($results as $post) {
-                $excerpt = wp_trim_words($post->post_content, 30);
+                $excerpt = wp_trim_words($post->post_content, 40);
                 echo '<div class="search-result">';
                 echo '<button style="border: 1px solid #00AF5A; border-radius: 5px; padding: 3px 10px; font-weight: 600" class="select-post" data-id="' . esc_attr($post->ID) . '" data-title="' . esc_attr($post->post_title) . '" data-excerpt="' . esc_attr($excerpt) . '">' . esc_html($post->post_title) . '</button>';
                 echo '<p>' . esc_html($excerpt) . '</p>';
@@ -639,7 +670,12 @@ final class XoaPodcastPlugin
         $title = sanitize_text_field($_POST['title']);
         update_option('xoa_voice_id_sample', $voice_id);
 
-        $audio_content = xoa_text_to_speech_sample(strip_tags($excerpt));
+        $check_api_choose = get_option('check_api_choose', '');
+
+        $audio_content = ($check_api_choose != 'google') ?
+            xoa_text_to_speech_sample(strip_tags($excerpt)) :
+            xoa_text_to_speech_google_api(strip_tags($excerpt));
+
         if ($audio_content !== false) {
             $upload_dir = wp_upload_dir();
             $audio_dir = $upload_dir['basedir'] . '/excerpt/';
@@ -679,7 +715,7 @@ final class XoaPodcastPlugin
 
         $audio_dir_ex = $upload_dir['basedir'] . '/excerpt/';
         $files = glob($audio_dir_ex . '*.mp3');
-        
+
         foreach ($files as $file) {
             if (file_exists($file)) {
                 unlink($file);
@@ -687,7 +723,13 @@ final class XoaPodcastPlugin
         }
 
         $content = get_post_field('post_content', $post_id);
-        $audio_content = xoa_text_to_speech_sample(strip_tags($content));
+
+        $check_api_choose = get_option('check_api_choose', '');
+
+        $audio_content = ($check_api_choose != 'google') ?
+            xoa_text_to_speech_sample(strip_tags($content)) :
+            xoa_text_to_speech_google_api(strip_tags($content));
+
         if ($audio_content !== false) {
             if (!file_exists($audio_dir)) {
                 wp_mkdir_p($audio_dir);
@@ -701,15 +743,16 @@ final class XoaPodcastPlugin
         }
     }
 
-    function xoa_delete_audio_file_callback() {
+    function xoa_delete_audio_file_callback()
+    {
         check_ajax_referer('xoa_delete_audio_file_nonce', 'nonce');
-    
+
         if (isset($_POST['post_id'])) {
             $post_id = intval($_POST['post_id']);
-    
+
             $file_url = get_post_meta($post_id, '_podcast_from_blog', true);
 
-            $file_path = str_replace(home_url('/'), ABSPATH, $file_url);   
+            $file_path = str_replace(home_url('/'), ABSPATH, $file_url);
 
             if (file_exists($file_path)) {
                 unlink($file_path);
@@ -720,7 +763,7 @@ final class XoaPodcastPlugin
             wp_send_json_error('No post ID provided.');
         }
     }
-    
+
     function xoa_add_enctype_attribute($post)
     {
         echo ' enctype="multipart/form-data"';
@@ -1851,7 +1894,6 @@ final class XoaPodcastPlugin
         add_action('wp_ajax_xoa_save_voice_and_excerpt', [$this, 'xoa_save_voice_and_excerpt']);
         add_action('wp_ajax_xoa_save_voice_check_file_mp3_podcast', [$this, 'xoa_save_voice_check_file_mp3_podcast']);
         add_action('wp_ajax_xoa_delete_audio_file', [$this, 'xoa_delete_audio_file_callback']);
-
     }
 }
 
@@ -1861,3 +1903,4 @@ require_once plugin_dir_path(__FILE__) . 'xoa_text_to_speech_sample.php';
 // require_once plugin_dir_path(__FILE__) . 'xoa_generate_mp3_files.php';
 require_once plugin_dir_path(__FILE__) . 'xoa_display_generated_mp3_list.php';
 require_once plugin_dir_path(__FILE__) . 'content_podcast_slider.php';
+require_once plugin_dir_path(__FILE__) . 'xoa_text_to_speech_google_api.php';

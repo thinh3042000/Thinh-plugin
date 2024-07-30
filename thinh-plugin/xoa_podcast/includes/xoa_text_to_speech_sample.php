@@ -5,13 +5,16 @@ function xoa_text_to_speech_sample($text)
 
     $KEY_API = get_option('xoa_api_key', '');
     $Voice_ID_Sample = get_option('xoa_voice_id_sample', '');
-    // var_dump(1);die;
+    // $data = [
+    //     "1" => $KEY_API,
+    //     "2" => $Voice_ID_Sample
+    // ];
     curl_setopt_array($curl, [
         CURLOPT_URL => "https://api.elevenlabs.io/v1/text-to-speech/{$Voice_ID_Sample}",
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_ENCODING => "",
         CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 300,
+        CURLOPT_TIMEOUT => 120,
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_CUSTOMREQUEST => "POST",
         CURLOPT_POSTFIELDS => json_encode([
@@ -26,6 +29,7 @@ function xoa_text_to_speech_sample($text)
 
     $response = curl_exec($curl);
     $err = curl_error($curl);
+    // var_dump( $data, $response);die;
 
     curl_close($curl);
 
