@@ -1,12 +1,6 @@
 <?php
 function xoa_text_to_speech($text)
 {
-
-    
-    // $check_api_choose = get_option('check_api_choose', '');
-
-    // var_dump($check_api_choose,"111");die;
-
     $curl = curl_init();
 
     $KEY_API = get_option('xoa_api_key', '');

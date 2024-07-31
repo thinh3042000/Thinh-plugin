@@ -1,10 +1,11 @@
 <?php
-function xoa_text_to_speech_google_api($text) {
+function xoa_text_to_speech_google_api_setting($text) {
     $KEY_API = get_option('xoa_api_key_google', '');
 
-    $google_language_code = get_option('google_language_code', '');
-    $google_voice_name = get_option('google_voice_name', '');
+    $google_language_code_st = get_option('google_language_code_setting', '');
+    $google_voice_name_st = get_option('google_voice_name_setting', '');
   
+    //  var_dump($google_language_code_st,$google_voice_name_st );die;
     $url = 'https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=' . $KEY_API;
 
     $chunks = str_split($text, 5000); 
@@ -15,8 +16,8 @@ function xoa_text_to_speech_google_api($text) {
         $data = [
             'input' => ['text' => $chunk],
             'voice' => [
-                'languageCode' => $google_language_code, 
-                'name' => $google_voice_name
+                'languageCode' => $google_language_code_st, 
+                'name' => $google_voice_name_st
             ],
             'audioConfig' => [
                 'audioEncoding' => 'LINEAR16',
