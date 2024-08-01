@@ -1,31 +1,36 @@
 <?php
 function xoa_text_to_speech_google_api_setting($text) {
     $KEY_API = get_option('xoa_api_key_google', '');
-
+    
     $google_language_code_st = get_option('google_language_code_setting', '');
     $google_voice_name_st = get_option('google_voice_name_setting', '');
-  
-    //  var_dump($google_language_code_st,$google_voice_name_st );die;
-    $url = 'https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=' . $KEY_API;
+    $ssmlGenderr = get_option('ssmlGenderr', '');
+    
+    $url = 'https://texttospeech.googleapis.com/v1/text:synthesize?key=' . $KEY_API;
 
     $chunks = str_split($text, 5000); 
 
     $audioContents = [];
-
     foreach ($chunks as $chunk) {
-        $data = [
-            'input' => ['text' => $chunk],
-            'voice' => [
-                'languageCode' => $google_language_code_st, 
-                'name' => $google_voice_name_st
-            ],
-            'audioConfig' => [
-                'audioEncoding' => 'LINEAR16',
-                'effectsProfileId' => ['small-bluetooth-speaker-class-device'],
-                'pitch' => 0,
-                'speakingRate' => 1
-            ]
-        ];
+        // $data = [
+        //     'input' => ['text' => $chunk],
+        //     'voice' => [
+        //         'languageCode' => $google_language_code_st, 
+        //         'name' => $google_voice_name_st
+        //     ],
+        //     'audioConfig' => [
+        //         'audioEncoding' => 'LINEAR16',
+        //         'effectsProfileId' => ['small-bluetooth-speaker-class-device'],
+        //         'pitch' => 0,
+        //         'speakingRate' => 1
+        //     ]
+        // ];
+
+        $data = array(
+            'input' => array('text' => $chunk),
+            'voice' => array('languageCode' => $google_language_code_st, 'ssmlGender' => $ssmlGenderr, 'name' => $google_voice_name_st),
+            'audioConfig' => array('audioEncoding' => 'MP3')
+        );
 
         $json_data = json_encode($data);
 
@@ -53,7 +58,6 @@ function xoa_text_to_speech_google_api_setting($text) {
             return false;
         }
     }
-
     $finalAudio = implode('', $audioContents);
 
     return $finalAudio;

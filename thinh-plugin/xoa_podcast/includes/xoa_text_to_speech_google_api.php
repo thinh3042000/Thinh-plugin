@@ -4,27 +4,35 @@ function xoa_text_to_speech_google_api($text) {
 
     $google_language_code = get_option('google_language_code', '');
     $google_voice_name = get_option('google_voice_name', '');
-  
-    $url = 'https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=' . $KEY_API;
+    $ssmlGender = get_option('ssmlGender', '');
+
+    
+    $url = 'https://texttospeech.googleapis.com/v1/text:synthesize?key=' . $KEY_API;
 
     $chunks = str_split($text, 5000); 
 
     $audioContents = [];
-
+    $dem = 0;
     foreach ($chunks as $chunk) {
-        $data = [
-            'input' => ['text' => $chunk],
-            'voice' => [
-                'languageCode' => $google_language_code, 
-                'name' => $google_voice_name
-            ],
-            'audioConfig' => [
-                'audioEncoding' => 'LINEAR16',
-                'effectsProfileId' => ['small-bluetooth-speaker-class-device'],
-                'pitch' => 0,
-                'speakingRate' => 1
-            ]
-        ];
+        // $data = [
+        //     'input' => ['text' => $chunk],
+        //     'voice' => [
+        //         'languageCode' => $google_language_code, 
+        //         'name' => $google_voice_name
+        //     ],
+        //     'audioConfig' => [
+        //         'audioEncoding' => 'LINEAR16',
+        //         'effectsProfileId' => ['small-bluetooth-speaker-class-device'],
+        //         'pitch' => 0,
+        //         'speakingRate' => 1
+        //     ]
+        // ];
+
+        $data = array(
+            'input' => array('text' => $chunk),
+            'voice' => array('languageCode' => $google_language_code, 'ssmlGender' => $ssmlGender, 'name' => $google_voice_name),
+            'audioConfig' => array('audioEncoding' => 'MP3')
+        );
 
         $json_data = json_encode($data);
 
@@ -51,6 +59,7 @@ function xoa_text_to_speech_google_api($text) {
             error_log('Error in API response: ' . print_r($response, true));
             return false;
         }
+        $dem++;
     }
 
     $finalAudio = implode('', $audioContents);

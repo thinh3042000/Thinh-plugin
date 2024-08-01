@@ -102,7 +102,7 @@ final class XoaPodcastPlugin
                     $audio_content = ($check_api_choose != 'google') ?
                         xoa_text_to_speech(strip_tags($post_content)) :
                         xoa_text_to_speech_google_api_setting(strip_tags($post_content));
-                        
+
                     if ($audio_content !== false) {
                         file_put_contents($audio_file, $audio_content);
                     }
@@ -153,9 +153,13 @@ final class XoaPodcastPlugin
             $voice_parts = explode('.', $voice_google_id);
             $language_code = $voice_parts[0];
             $voice_name = $voice_parts[1];
+            $ssmlGenderr = $voice_parts[2];
+
             update_option('google_language_code_setting', $language_code);
             update_option('google_voice_name_setting', $voice_name);
             update_option('voice_google_id_stg', $voice_google_id);
+            update_option('ssmlGenderr', $ssmlGenderr);
+
             echo '<div class="updated"><p>Settings saved.</p></div>';
         }
 
@@ -227,7 +231,7 @@ final class XoaPodcastPlugin
         echo '</tr>';
 
 
-        
+
         // Voice google ID select
         echo '<tr>';
         echo '<th scope="row"><label for="xoa_voice_google_id">Voice Google</label></th>';
@@ -393,15 +397,16 @@ final class XoaPodcastPlugin
             echo '<input type="checkbox" id="delete_podcast_audio_file" name="delete_podcast_audio_file" value="1" /> Delete File';
         }
     }
-    function xoa_podcast_from_blogs_callback($post) {
+    function xoa_podcast_from_blogs_callback($post)
+    {
         wp_nonce_field('xoa_save_podcast_from_blogs', 'xoa_podcast_from_blogs_nonce');
-    
+
         $selected_post_id = get_post_meta($post->ID, '_podcast_from_blog', true);
         $audio_file_url = esc_url($selected_post_id);
-    
+
         echo '<input type="hidden" id="current_post_id" value="' . esc_attr($post->ID) . '">';
         echo '<input type="hidden" id="podcast_from_blog_id" name="podcast_from_blog_id" value="' . esc_attr($selected_post_id) . '" />';
-    
+
         if ($selected_post_id) {
             echo '<div id="audio_player_container" style="padding: 10px; background: #f0f0f0; border: 1px solid #ccc; color: #333;">';
             echo '<p>Audio File:</p>';
@@ -414,23 +419,23 @@ final class XoaPodcastPlugin
             echo '</div>';
         } else {
             echo '<button type="button" id="show_blog_search" class="button button-primary">' . esc_html__('Choose from Blogs', 'hello-elementor') . '</button>';
-    
+
             echo '<div id="blog_search_container" style="display: none;">';
             echo '<button type="button" id="back_to_initial" class="button button-secondary" style="margin-bottom: 10px;">' . esc_html__('Back', 'hello-elementor') . '</button>';
             echo '<input style="width: 100%; margin-bottom: 10px;" type="text" id="podcast_blog_search" placeholder="' . esc_attr__('Search from Blogs...', 'hello-elementor') . '" />';
             echo '<div id="podcast_blog_results"></div>';
             echo '</div>';
         }
-    
+
         echo '<div id="status_message" style="display: none; padding: 10px; background: #f0f0f0; border: 1px solid #ccc; color: #333;"></div>';
-    
+
         $data_name = [];
-    
+
         $file_path = plugin_dir_path(__FILE__) . 'voice_select.php';
         if (file_exists($file_path)) {
             include $file_path;
         }
-        
+
         $file_path = plugin_dir_path(__FILE__) . 'voice_google.php';
         if (file_exists($file_path)) {
             include $file_path;
@@ -439,11 +444,11 @@ final class XoaPodcastPlugin
         }
 
         $check_api_choose = get_option('check_api_choose', '');
-    
+
         echo '<div id="select_voice_container" style="display: none;">';
         echo '<button type="button" id="back_to_search" class="button button-secondary">' . esc_html__('Back', 'hello-elementor') . '</button>';
         echo '<p id="voice_selection_message"></p>';
-    
+
         if ($check_api_choose !== 'google') {
             $select_options = '<span>Voice: </span><select style="width:40%" id="voice_select" name="voice_select">';
             foreach ($data_name as $voice) {
@@ -452,7 +457,7 @@ final class XoaPodcastPlugin
             $select_options .= '</select>';
             echo $select_options;
         } else {
-           
+
             $select_options = '<span>Voice: </span><select style="width:40%" id="voice_select" name="voice_select">';
             foreach ($data_google_voice as $voice) {
                 $select_options .= '<option value="' . esc_attr($voice['type_voice']) . '">' . esc_html($voice['name']) . '</option>';
@@ -460,10 +465,10 @@ final class XoaPodcastPlugin
             $select_options .= '</select>';
             echo $select_options;
         }
-    
+
         echo '<button type="button" id="xoa_save_settings_sample" class="button button-primary">Audio Test</button>';
         echo '</div>';
-    
+
         echo '
             <script>
                 document.addEventListener("DOMContentLoaded", function() {
@@ -648,8 +653,30 @@ final class XoaPodcastPlugin
                                     });
     
                                     document.getElementById("reject_audio_test").addEventListener("click", function() {
-                                        location.reload();
-                                    });
+    fetch(ajaxurl, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams({
+            action: "xoa_delete_voice_check_file_mp3_podcast",
+            title: Title,
+            post_id: PostID,
+            nonce: "' . wp_create_nonce('xoa_delete_voice_check_file_mp3_podcast') . '"
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert("Failed to delete MP3 file. Please try again.");
+        }
+    })
+    .catch(error => console.error("Error:", error));
+});
+
+
                                 } else {
                                     alert("Failed to save. Please try again.");
                                 }
@@ -661,7 +688,7 @@ final class XoaPodcastPlugin
             </script>
         ';
     }
-    
+
 
     function xoa_search_blog_posts()
     {
@@ -695,14 +722,16 @@ final class XoaPodcastPlugin
 
         $check_api_choose = get_option('check_api_choose', '');
         $voice_id = sanitize_text_field($_POST['voice_id']);
-        if($check_api_choose == 'google'){
+        if ($check_api_choose == 'google') {
             $voice_parts = explode('.', $voice_id);
-            $language_code = $voice_parts[0]; 
-            $voice_name = $voice_parts[1];     
-            
+            $language_code = $voice_parts[0];
+            $voice_name = $voice_parts[1];
+            $ssmlGender = $voice_parts[2];
+
             update_option('google_language_code', $language_code);
             update_option('google_voice_name', $voice_name);
-        }else{
+            update_option('ssmlGender', $ssmlGender);
+        } else {
             $voice_id = sanitize_text_field($_POST['voice_id']);
         }
         $excerpt = sanitize_text_field($_POST['excerpt']);
@@ -716,15 +745,14 @@ final class XoaPodcastPlugin
             xoa_text_to_speech_google_api(strip_tags($excerpt));
 
         if ($audio_content !== false) {
-            $upload_dir = wp_upload_dir();
-            $audio_dir = $upload_dir['basedir'] . '/excerpt/';
-
-            if (!file_exists($audio_dir)) {
-                wp_mkdir_p($audio_dir);
+            $plugin_dir = plugin_dir_path(__FILE__) . 'uploads/';
+            $plugin_url = plugin_dir_url(__FILE__) . 'uploads/';
+            if (!file_exists($plugin_dir)) {
+                wp_mkdir_p($plugin_dir);
             }
 
             $post_title = sanitize_title($title);
-            $audio_file = $audio_dir . $post_title . '.mp3';
+            $audio_file = $plugin_dir . $post_title . '.mp3';
 
             if (file_exists($audio_file)) {
                 unlink($audio_file);
@@ -732,9 +760,39 @@ final class XoaPodcastPlugin
 
             file_put_contents($audio_file, $audio_content);
 
-            wp_send_json_success(array('audio_url' => $upload_dir['baseurl'] . '/excerpt/' . $post_title . '.mp3'));
+            wp_send_json_success(array('audio_url' => $plugin_url . $post_title . '.mp3'));
         } else {
             wp_send_json_error();
+        }
+    }
+
+    function xoa_delete_voice_check_file_mp3_podcast_callback()
+    {
+        check_ajax_referer('xoa_delete_voice_check_file_mp3_podcast', 'nonce');
+        $title = sanitize_title($_POST['title']);
+
+        $plugin_dir = plugin_dir_path(__FILE__) . 'uploads/';
+        $audio_file = $plugin_dir . $title . '.mp3';
+
+        if (file_exists($audio_file)) {
+            if (unlink($audio_file)) {
+                wp_cache_flush();
+
+                // Xóa cache của W3 Total Cache nếu có
+                if (function_exists('w3tc_flush_all')) {
+                    w3tc_flush_all();
+                }
+    
+                // Xóa cache của WP Super Cache nếu có
+                if (function_exists('wp_cache_clear_cache')) {
+                    wp_cache_clear_cache();
+                }
+                wp_send_json_success();
+            } else {
+                wp_send_json_error('Failed to delete the MP3 file.');
+            }
+        } else {
+            wp_send_json_error('MP3 file does not exist.');
         }
     }
 
@@ -1933,6 +1991,7 @@ final class XoaPodcastPlugin
         add_action('wp_ajax_xoa_save_voice_and_excerpt', [$this, 'xoa_save_voice_and_excerpt']);
         add_action('wp_ajax_xoa_save_voice_check_file_mp3_podcast', [$this, 'xoa_save_voice_check_file_mp3_podcast']);
         add_action('wp_ajax_xoa_delete_audio_file', [$this, 'xoa_delete_audio_file_callback']);
+        add_action('wp_ajax_xoa_delete_voice_check_file_mp3_podcast', [$this, 'xoa_delete_voice_check_file_mp3_podcast_callback']);
     }
 }
 
