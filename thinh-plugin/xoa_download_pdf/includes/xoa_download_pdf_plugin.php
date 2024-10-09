@@ -64,7 +64,7 @@ final class XoaDownloadPdfPlugin extends MYPDF
     public function __construct()
     {
         add_action('elementor/frontend/after_register_scripts', [$this, 'frontend_scripts']);
-        add_action('init', [$this, 'handle_fitler']);
+        // add_action('init', [$this, 'handle_fitler']);
         add_action('template_redirect', [$this, 'create_pdf']);
     }
 
@@ -196,23 +196,23 @@ final class XoaDownloadPdfPlugin extends MYPDF
             exit;
         }
     }
-    function add_download_pdf_button($content)
-    {
-        if (is_single() && is_main_query() && !isset($_GET['download_pdf'])) {
-            $plugin_url = plugin_dir_url(__FILE__);
-            $image_url = $plugin_url . '../assets/img/pdf.png';
-            $button = '<div class="download-pdf-link">';
-            $button .= '<a target="_blank" href="?download_pdf" class="download-pdf-button" style="display: inline-flex; align-items: center; text-decoration: none;">';
-            $button .= '<img src="' . esc_url($image_url) . '" alt="Download PDF" width="70" height="70" style="margin-right: 5px;">';
-            $button .= '<span style="font-size: 16px; color: #00AF5A;">Download PDF</span>';
-            $button .= '</a>';
-            $button .= '</div>';
-            $content .= $button;
-        }
-        return $content;
-    }
-    function handle_fitler()
-    {
-        add_filter('the_content', [$this, 'add_download_pdf_button']);
-    }
+    // function add_download_pdf_button($content)
+    // {
+    //     if (is_single() && is_main_query() && !isset($_GET['download_pdf'])) {
+    //         $plugin_url = plugin_dir_url(__FILE__);
+    //         $image_url = $plugin_url . '../assets/img/pdf.png';
+    //         $button = '<div class="download-pdf-link">';
+    //         $button .= '<a target="_blank" href="?download_pdf" class="download-pdf-button" style="display: inline-flex; align-items: center; text-decoration: none;">';
+    //         $button .= '<img src="' . esc_url($image_url) . '" alt="Download PDF" width="70" height="70" style="margin-right: 5px;">';
+    //         $button .= '<span style="font-size: 16px; color: #00AF5A;">Download PDF</span>';
+    //         $button .= '</a>';
+    //         $button .= '</div>';
+    //         $content .= $button;
+    //     }
+    //     return $content;
+    // }
+    // function handle_fitler()
+    // {
+    //     add_filter('the_content', [$this, 'add_download_pdf_button']);
+    // }
 }
